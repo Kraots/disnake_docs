@@ -35,7 +35,7 @@ with open(f'{ROOT}/requirements.txt', 'r', encoding='utf-8') as f:
     REQUIREMENTS = f.read().splitlines()
 
 setup(
-    name='disnake_docs',
+    name='disnake-docs',
     author='Kraots',
     url='https://github.com/Kraots/disnake_docs',
 
