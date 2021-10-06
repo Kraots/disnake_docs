@@ -28,7 +28,7 @@ from typing import Union
 from disnake import Client
 from disnake.ext.commands import Bot
 
-__version__ = '1.0.7'
+__version__ = '1.0.8'
 
 MAX_SIGNATURE_AMOUNT = 3
 PRIORITY_PACKAGES = (
