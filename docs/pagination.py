@@ -45,7 +45,7 @@ class EmbedPaginator(disnake.ui.View):
         self.current_page = 0
 
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
-        if interaction.user and interaction.user.id in (self.ctx.bot._owner_id, self.ctx.author.id):
+        if interaction.user and interaction.user.id in (self.ctx.bot.owner_id, self.ctx.author.id):
             return True
         await interaction.response.send_message('This pagination menu cannot be controlled by you, sorry!', ephemeral=True)
         return False
@@ -201,7 +201,7 @@ class RoboPages(disnake.ui.View):
             pass
 
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
-        if interaction.user and interaction.user.id in (self.ctx.bot._owner_id, self.ctx.author.id):
+        if interaction.user and interaction.user.id in (self.ctx.bot.owner_id, self.ctx.author.id):
             return True
         await interaction.response.send_message('This pagination menu cannot be controlled by you, sorry!', ephemeral=True)
         return False
