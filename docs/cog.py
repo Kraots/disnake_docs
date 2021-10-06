@@ -375,20 +375,6 @@ class Docs(commands.Cog):
         self.update_single(package_name, base_url, inventory_dict)
         await ctx.send(f"Added the package `{package_name}` the inventories.")
 
-    @docs_group.command(name="deletedoc", aliases=("removedoc", "rm", "d"))
-    @commands.is_owner()
-    @lock(NAMESPACE, COMMAND_LOCK_SINGLETON, raise_error=True)
-    async def delete_command(self, ctx: commands.Context, package_name: PackageName) -> None:
-        """
-        Removes the specified package from the database.
-        Example:
-            !docs deletedoc aiohttp
-        """
-
-        async with ctx.typing():
-            await self.refresh_inventories()
-        await ctx.send(f"Successfully deleted `{package_name}` and refreshed the inventories.")
-
     @docs_group.command(name="refreshdoc", aliases=("refresh", "r"))
     @commands.is_owner()
     @lock(NAMESPACE, COMMAND_LOCK_SINGLETON, raise_error=True)
