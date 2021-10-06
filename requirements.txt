@@ -1,0 +1,4 @@
+disnake
+aiohttp
+beautifulsoup4
+markdownify
