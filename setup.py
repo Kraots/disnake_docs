@@ -23,10 +23,11 @@ SOFTWARE.
 """
 
 from setuptools import setup
-import pathlib
+# import pathlib
 from docs import __version__
 
-ROOT = pathlib.Path(__file__).parent
+# ROOT = pathlib.Path(__file__).parent
+ROOT = '.'
 
 with open(f'{ROOT}/README.md', 'r', encoding='utf-8') as f:
     README = f.read()
