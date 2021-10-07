@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import aiohttp
 
 from .utils import create_task
-from . import cog
+from . import cog, doc_cache
 from .parsing import get_symbol_markdown
 
 
@@ -99,6 +99,8 @@ class BatchParser:
 
                 try:
                     markdown = await self._loop.run_in_executor(None, get_symbol_markdown, soup, item)
+                    if markdown is not None:
+                        doc_cache.set(item, markdown)
                 except Exception:
                     pass
 
