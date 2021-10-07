@@ -1,5 +1,4 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/disnake.svg)](https://pypi.python.org/pypi/disnake-docs)
-[![License](https://img.shields.io/pypi/l/jishaku.svg)](https://github.com/Kraots/disnake_docs/blob/master/LICENSE)
 
 ***
 
