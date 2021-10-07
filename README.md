@@ -49,4 +49,4 @@ bot.run(...)
 
 ## Inspired By
 ***
-[python-discord/bot](https://github.com/python-discord/bot) - The community bot for the Python Discord community
+[python-discord/bot/bot/exts/info/doc](https://github.com/python-discord/bot/tree/main/bot/exts/info/doc) - The community bot for the Python Discord community
