@@ -58,11 +58,20 @@ class DocItem(NamedTuple):
 class Docs(commands.Cog):
     """A set of commands for querying & displaying documentation."""
 
-    def __init__(self, bot: Union[Client, Bot]):
+    def __init__(self, bot: Union[Client, Bot], *, limit: int = 4):
+        """
+        If limit is given, the max amount of entries to look up for will become that limit.
+
+        It's recommended that this never goes above **8**, otherwise expect slow results.
+
+        Default is 4.
+        """
+
         # Contains URLs to documentation home pages.
         # Used to calculate inventory diffs on refreshes and to display all currently stored inventories.
         self.base_urls = {}
         self.bot = bot
+        self.limit = limit
         self.doc_symbols: Dict[str, DocItem] = {}  # Maps symbol names to objects containing their metadata.
         self.item_fetcher = batch_parser.BatchParser()
 
@@ -220,7 +229,7 @@ class Docs(commands.Cog):
         Get the `DocItem` and the symbol name used to fetch it from the `doc_symbols` dict.
         """
         doc_symbols = list(self.doc_symbols.items())
-        matches = finder(symbol_name, doc_symbols, key=lambda t: t[0], lazy=False)[:8]
+        matches = finder(symbol_name, doc_symbols, key=lambda t: t[0], lazy=False)[:self.limit]
         return matches
 
     async def get_symbol_markdown(self, doc_item: DocItem) -> str:
