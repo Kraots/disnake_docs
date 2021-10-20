@@ -151,7 +151,7 @@ class Scheduler:
 def create_task(
     coro: t.Awaitable,
     *,
-    suppressed_exceptions: tuple[t.Type[Exception]] = (),
+    suppressed_exceptions: t.Tuple[t.Type[Exception]] = (),
     event_loop: t.Optional[asyncio.AbstractEventLoop] = None,
     **kwargs,
 ) -> asyncio.Task:
