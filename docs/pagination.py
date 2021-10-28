@@ -44,11 +44,13 @@ class EmbedPaginator(disnake.ui.View):
     @disnake.ui.button(label='≪', style=disnake.ButtonStyle.grey)
     async def go_to_first_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
         """Go to the first page."""
+
         await self.show_page(0)
 
     @disnake.ui.button(label='Back', style=disnake.ButtonStyle.blurple)
     async def go_to_previous_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
         """Go to the previous page."""
+
         await self.show_page(self.current_page - 1)
 
     @disnake.ui.button(label='Next', style=disnake.ButtonStyle.blurple)
@@ -59,17 +61,20 @@ class EmbedPaginator(disnake.ui.View):
     @disnake.ui.button(label='≫', style=disnake.ButtonStyle.grey)
     async def go_to_last_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
         """Go to the last page."""
+
         await self.show_page(len(self.embeds) - 1)
 
     @disnake.ui.button(label='Quit', style=disnake.ButtonStyle.red)
     async def stop_pages(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """stops the pagination session."""
+        """Stops the pagination session."""
+
         await interaction.response.defer()
         await interaction.delete_original_message()
         self.stop()
 
     async def start(self):
         """Start paginating over the embeds."""
+
         embed = self.embeds[0]
         embed.set_footer(text=f'Page 1/{len(self.embeds)}')
         self.message = await self.ctx.send(embed=embed, view=self)
@@ -205,12 +210,14 @@ class RoboPages(disnake.ui.View):
 
     @disnake.ui.button(label='≪', style=disnake.ButtonStyle.grey)
     async def go_to_first_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """go to the first page"""
+        """Go to the first page."""
+
         await self.show_page(interaction, 0)
 
     @disnake.ui.button(label='Back', style=disnake.ButtonStyle.blurple)
     async def go_to_previous_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """go to the previous page"""
+        """Go to the previous page."""
+
         await self.show_checked_page(interaction, self.current_page - 1)
 
     @disnake.ui.button(label='Current', style=disnake.ButtonStyle.grey, disabled=True)
@@ -219,18 +226,21 @@ class RoboPages(disnake.ui.View):
 
     @disnake.ui.button(label='Next', style=disnake.ButtonStyle.blurple)
     async def go_to_next_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """go to the next page"""
+        """Go to the next page."""
+
         await self.show_checked_page(interaction, self.current_page + 1)
 
     @disnake.ui.button(label='≫', style=disnake.ButtonStyle.grey)
     async def go_to_last_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """go to the last page"""
+        """Go to the last page."""
+
         # The call here is safe because it's guarded by skip_if
         await self.show_page(interaction, self.source.get_max_pages() - 1)
 
     @disnake.ui.button(label='Skip to page...', style=disnake.ButtonStyle.grey)
     async def numbered_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """lets you type a page number to go to"""
+        """Lets you type a page number to go to."""
+
         if self.input_lock.locked():
             await interaction.response.send_message('Already waiting for your response...', ephemeral=True)
             return
@@ -258,7 +268,8 @@ class RoboPages(disnake.ui.View):
 
     @disnake.ui.button(label='Quit', style=disnake.ButtonStyle.red)
     async def stop_pages(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        """stops the pagination session."""
+        """Stops the pagination session."""
+
         await interaction.response.defer()
         await interaction.delete_original_message()
         self.stop()
