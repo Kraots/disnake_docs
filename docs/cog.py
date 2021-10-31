@@ -12,10 +12,10 @@ from disnake.ext import commands
 from disnake.ext.commands import Bot
 
 from .converters import Inventory, PackageName, ValidURL
-from .lock import SharedEvent, lock
+from .lock import SharedEvent
 from .messages import send_denial
 from .pagination import EmbedPaginator, Paginator
-from . import NAMESPACE, PRIORITY_PACKAGES, batch_parser, doc_cache
+from . import PRIORITY_PACKAGES, batch_parser, doc_cache
 from .inventory_parser import InventoryDict, fetch_inventory
 from .utils import (
     create_task,
@@ -90,7 +90,6 @@ class Docs(commands.Cog):
             event_loop=self.bot.loop
         )
 
-    @lock(NAMESPACE, COMMAND_LOCK_SINGLETON, raise_error=True)
     async def init_refresh_inventory(self) -> None:
         """Refresh documentation inventory on cog initialization."""
         await self.refresh_inventories()
@@ -336,7 +335,6 @@ class Docs(commands.Cog):
 
     @docs_group.command(name="setdoc", aliases=("s",))
     @commands.is_owner()
-    @lock(NAMESPACE, COMMAND_LOCK_SINGLETON, raise_error=True)
     async def set_command(
         self,
         ctx: commands.Context,
@@ -364,7 +362,6 @@ class Docs(commands.Cog):
 
     @docs_group.command(name="refreshdoc", aliases=("refresh", "r"))
     @commands.is_owner()
-    @lock(NAMESPACE, COMMAND_LOCK_SINGLETON, raise_error=True)
     async def refresh_command(self, ctx: commands.Context) -> None:
         """Refresh inventories and show the difference."""
         old_inventories = set(self.base_urls)

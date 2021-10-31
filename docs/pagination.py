@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, List
 import asyncio
 
 import disnake
+from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
 
 from . import menus
@@ -30,7 +31,7 @@ class EmbedPaginator(disnake.ui.View):
         if self.message:
             await self.message.edit(view=None)
 
-    async def show_page(self, page_number: int):
+    async def show_page(self, inter: ApplicationCommandInteraction, page_number: int):
         if (
             (page_number < 0) or
             (page_number > len(self.embeds) - 1)
@@ -39,7 +40,10 @@ class EmbedPaginator(disnake.ui.View):
         self.current_page = page_number
         embed = self.embeds[page_number]
         embed.set_footer(text=f'Page {self.current_page + 1}/{len(self.embeds)}')
-        await self.message.edit(embed=embed)
+        if inter.response.is_done():
+            await self.message.edit(embed=embed)
+        else:
+            await inter.response.edit_message(embed=embed)
 
     @disnake.ui.button(label='≪', style=disnake.ButtonStyle.grey)
     async def go_to_first_page(self, button: disnake.ui.Button, interaction: disnake.Interaction):
