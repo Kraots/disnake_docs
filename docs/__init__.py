@@ -5,7 +5,7 @@ from disnake.ext.commands import Bot
 
 from .cache import DocCache
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 
 MAX_SIGNATURE_AMOUNT = 3
 PRIORITY_PACKAGES = (
