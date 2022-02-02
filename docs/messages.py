@@ -1,7 +1,7 @@
 import random
 
 import disnake
-from disnake.ext.commands import Context
+from disnake import AppCmdInter
 
 NEGATIVE_REPLIES = (
     "Noooooo!!",
@@ -24,11 +24,17 @@ NEGATIVE_REPLIES = (
 )
 
 
-async def send_denial(ctx: Context, reason: str, *, view: disnake.ui.View = None) -> disnake.Message:
+async def send_denial(
+    inter: AppCmdInter,
+    reason: str,
+    *,
+    view: disnake.ui.View = None,
+    ephemeral: bool = False
+) -> None:
     """Send an embed denying the user with the given reason."""
     embed = disnake.Embed()
     embed.colour = disnake.Colour.red()
     embed.title = random.choice(NEGATIVE_REPLIES)
     embed.description = reason
 
-    return await ctx.send(embed=embed, view=view)
+    return await inter.send(embed=embed, view=view, ephemeral=ephemeral)
