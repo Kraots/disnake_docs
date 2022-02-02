@@ -290,15 +290,7 @@ class Docs(commands.Cog):
             description='The doc to look for'
         )
     ) -> None:
-        """
-        Return a documentation embed for a given symbol.
-        If no symbol is given, return a list of all available inventories.
-        Examples:
-            !docs
-            !docs aiohttp
-            !docs aiohttp.ClientSession
-            !docs getdoc aiohttp.ClientSession
-        """
+        """Return a documentation embed for a given symbol."""
 
         await inter.response.defer()
         symbol = symbol_name.strip("`")
@@ -332,7 +324,7 @@ class Docs(commands.Cog):
         """Get a base url from the url to an objects inventory by removing the last path segment."""
         return inventory_url.removesuffix("/").rsplit("/", maxsplit=1)[0] + "/"
 
-    @docs_group.sub_command(name="setdoc")
+    @docs_group.sub_command(name="set-doc")
     @commands.is_owner()
     async def set_command(
         self,
@@ -385,13 +377,13 @@ class Docs(commands.Cog):
         )
         await inter.followup.send(embed=embed, ephemeral=True)
 
-    @docs_group.sub_command(name="cleardoccache")
+    @docs_group.sub_command(name="clear-doc-cache")
     @commands.is_owner()
     async def clear_cache_command(
         self,
         inter: AppCmdInter
     ) -> None:
-        """Clears the cache while refreshing the inventories like `!docs refreshdoc` does."""
+        """Clears the cache while refreshing the inventories."""
 
         doc_cache.delete()
         await self.refresh_inventories()
