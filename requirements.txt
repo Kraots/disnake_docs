@@ -1,4 +1,4 @@
-disnake
+disnake>=2.2.2
 aiohttp
 beautifulsoup4
 markdownify==0.6.1
