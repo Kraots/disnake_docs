@@ -386,7 +386,7 @@ class Docs(commands.Cog):
 
         doc_cache.delete()
         await self.refresh_inventories()
-        await inter.send("Successfully cleared the cache and refreshed the inventories.")
+        await inter.send("Successfully cleared the cache and refreshed the inventories.", ephemeral=True)
 
     def cog_unload(self) -> None:
         """Clear scheduled inventories, queued symbols and cleanup task on cog unload."""
