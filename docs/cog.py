@@ -297,8 +297,7 @@ class Docs(commands.Cog):
         doc_embeds = await self.create_symbol_embed(symbol)
 
         if doc_embeds is None:
-            view = QuitButton(inter, timeout=NOT_FOUND_DELETE_DELAY, delete_after=True)
-            view.message = await send_denial(inter, "No documentation found for the requested symbol.", view=view)
+            return await send_denial(inter, "No documentation found for the requested symbol.", ephemeral=True)
 
         else:
             if len(doc_embeds) == 1:
