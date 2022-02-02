@@ -332,7 +332,7 @@ class Docs(commands.Cog):
         """Get a base url from the url to an objects inventory by removing the last path segment."""
         return inventory_url.removesuffix("/").rsplit("/", maxsplit=1)[0] + "/"
 
-    @docs_group.sub_command(name="set-doc")
+    @docs_group.sub_command(name="setdoc")
     @commands.is_owner()
     async def set_command(
         self,
@@ -385,7 +385,7 @@ class Docs(commands.Cog):
         )
         await inter.followup.send(embed=embed, ephemeral=True)
 
-    @docs_group.sub_command(name="clear-doc-cache")
+    @docs_group.sub_command(name="cleardoccache")
     @commands.is_owner()
     async def clear_cache_command(
         self,
