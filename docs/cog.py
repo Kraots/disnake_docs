@@ -229,7 +229,10 @@ class Docs(commands.Cog):
         doc_symbols = list(self.doc_symbols.items())
         matches = finder(symbol_name, doc_symbols, key=lambda t: t[0], lazy=False)[:self.limit]
         if doc_item is not None:
-            matches = [(symbol_name, doc_item), *matches]
+            res = (symbol_name, doc_item)
+            if res in matches:
+                matches.remove(res)
+            matches = [res, *matches]
         return matches
 
     async def get_symbol_markdown(self, doc_item: DocItem) -> str:
