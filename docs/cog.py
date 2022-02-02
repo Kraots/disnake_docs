@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-import asyncio
 import sys
+import asyncio
+import string as st
 from types import SimpleNamespace
 from typing import Dict, NamedTuple, Optional, List, Union
 
 import aiohttp
 import disnake
-from disnake import Client
+from disnake import Client, AppCmdInter
 from disnake.ext import commands
-from disnake.ext.commands import Bot
+from disnake.ext.commands import Bot, Param
 
-from .converters import Inventory, PackageName, ValidURL
+from .converters import Inventory, PackageName
 from .lock import SharedEvent
 from .messages import send_denial
-from .pagination import EmbedPaginator, Paginator
+from .pagination import EmbedPaginator
 from . import PRIORITY_PACKAGES, batch_parser, doc_cache
 from .inventory_parser import InventoryDict, fetch_inventory
 from .utils import (
@@ -57,6 +58,8 @@ class DocItem(NamedTuple):
 
 class Docs(commands.Cog):
     """A set of commands for querying & displaying documentation."""
+    DOC_SYMBOLS = {}
+    ALL_PACKAGES = []
 
     def __init__(self, bot: Union[Client, Bot], *, limit: int = 4):
         """
@@ -84,15 +87,6 @@ class Docs(commands.Cog):
             ('python', 'https://docs.python.org/3/'),
             ('disnake', 'https://disnake.readthedocs.io/en/latest/')
         )
-        self.init_refresh_task = create_task(
-            self.init_refresh_inventory(),
-            name="Doc inventory init",
-            event_loop=self.bot.loop
-        )
-
-    async def init_refresh_inventory(self) -> None:
-        """Refresh documentation inventory on cog initialization."""
-        await self.refresh_inventories()
 
     def update_single(self, package_name: str, base_url: str, inventory: InventoryDict) -> None:
         """
@@ -104,6 +98,8 @@ class Docs(commands.Cog):
             * `package` is the content of a intersphinx inventory.
         """
         self.base_urls[package_name] = base_url
+        if package_name not in self.ALL_PACKAGES:
+            self.ALL_PACKAGES.append(package_name)
 
         for group, items in inventory.items():
             for symbol_name, relative_doc_url in items:
@@ -126,6 +122,7 @@ class Docs(commands.Cog):
                     symbol_id,
                 )
                 self.doc_symbols[symbol_name] = doc_item
+                self.DOC_SYMBOLS[symbol_name] = doc_item
                 self.item_fetcher.add_item(doc_item)
 
     async def update_or_reschedule_inventory(
@@ -179,6 +176,7 @@ class Docs(commands.Cog):
             if rename_extant:
                 # Instead of renaming the current symbol, rename the symbol with which it conflicts.
                 self.doc_symbols[new_name] = self.doc_symbols[symbol_name]
+                self.DOC_SYMBOLS[new_name] = self.DOC_SYMBOLS[symbol_name]
                 return symbol_name
             else:
                 return new_name
@@ -277,13 +275,21 @@ class Docs(commands.Cog):
                 embeds.append(embed)
             return embeds
 
-    @commands.group(name="docs", aliases=("doc", "d"), invoke_without_command=True)
-    async def docs_group(self, ctx: commands.Context, *, symbol_name: Optional[str]) -> None:
-        """Look up documentation for Python symbols."""
-        await self.get_command(ctx, symbol_name=symbol_name)
+    @commands.slash_command(name="docs")
+    async def docs_group(*_) -> None:
+        """Base parent slash for the rest of the subcomands."""
 
-    @docs_group.command(name="getdoc", aliases=("g",))
-    async def get_command(self, ctx: commands.Context, *, symbol_name: Optional[str]) -> None:
+        pass
+
+    @docs_group.sub_command(name="get")
+    async def get_command(
+        self,
+        inter: AppCmdInter,
+        *,
+        symbol_name: str = Param(
+            description='The doc to look for'
+        )
+    ) -> None:
         """
         Return a documentation embed for a given symbol.
         If no symbol is given, return a list of all available inventories.
@@ -294,62 +300,56 @@ class Docs(commands.Cog):
             !docs getdoc aiohttp.ClientSession
         """
 
-        if not symbol_name:
-            lines = sorted(f"• [`{name}`]({url})" for name, url in self.base_urls.items())
-            if self.base_urls:
-                paginator = Paginator(
-                    ctx,
-                    lines,
-                    per_page=5,
-                    title=f'All inventories (`{len(self.base_urls)}` total)'
-                )
-                await paginator.start()
+        await inter.response.defer()
+        symbol = symbol_name.strip("`")
+        doc_embeds = await self.create_symbol_embed(symbol)
 
-            else:
-                inventory_embed = disnake.Embed(title=f'All inventories (`{len(self.base_urls)}` total)', color=disnake.Color.blurple())
-                inventory_embed.description = "Hmmm, seems like there's nothing here yet."
-                await ctx.send(embed=inventory_embed)
+        if doc_embeds is None:
+            view = QuitButton(inter, timeout=NOT_FOUND_DELETE_DELAY, delete_after=True)
+            view.message = await send_denial(inter, "No documentation found for the requested symbol.", view=view)
 
         else:
-            symbol = symbol_name.strip("`")
-            async with ctx.typing():
-                doc_embeds = await self.create_symbol_embed(symbol)
+            if len(doc_embeds) == 1:
+                view = QuitButton(inter)
+                await inter.followup.send(embed=doc_embeds[0], view=view)
+                return
 
-            if doc_embeds is None:
-                view = QuitButton(ctx, timeout=NOT_FOUND_DELETE_DELAY, delete_after=True)
-                view.message = await send_denial(ctx, "No documentation found for the requested symbol.", view=view)
+            paginator = EmbedPaginator(inter, doc_embeds)
+            await paginator.start()
 
-            else:
-                if len(doc_embeds) == 1:
-                    view = QuitButton(ctx)
-                    view.message = await ctx.send(embed=doc_embeds[0], view=view)
-                    return
-
-                paginator = EmbedPaginator(ctx, doc_embeds)
-                await paginator.start()
+    @get_command.autocomplete("symbol_name")
+    async def get_doc_autocomp(self, inter: AppCmdInter, string: str):
+        abc = st.ascii_lowercase
+        doc_symbols = []
+        for symbol in self.DOC_SYMBOLS:
+            if symbol[0] in abc:
+                doc_symbols.append(symbol)
+        matches = finder(string, doc_symbols, lazy=False)[:25]
+        return matches
 
     @staticmethod
     def base_url_from_inventory_url(inventory_url: str) -> str:
         """Get a base url from the url to an objects inventory by removing the last path segment."""
         return inventory_url.removesuffix("/").rsplit("/", maxsplit=1)[0] + "/"
 
-    @docs_group.command(name="setdoc", aliases=("s",))
+    @docs_group.sub_command(name="setdoc")
     @commands.is_owner()
     async def set_command(
         self,
-        ctx: commands.Context,
-        package_name: PackageName,
-        inventory: Inventory,
-        base_url: ValidURL = "",
+        inter: AppCmdInter,
+        package_name: str,
+        inventory: str
     ) -> None:
-        """
-        Adds a new documentation metadata object to the inventory.
-        If the base url is not specified, a default created by removing the last segment of the inventory url is used.
-        Example:
-            !docs setdoc \
-                    python \
-                    https://docs.python.org/3/objects.inv
-        """
+        """Adds a new documentation metadata object to the inventory."""
+
+        await inter.response.defer(ephemeral=True)
+        package_name = await PackageName.convert(inter, package_name)
+        inventory = await Inventory.convert(inter, inventory)
+
+        inventory_url, inventory_dict = inventory
+
+        base_url = self.base_url_from_inventory_url(inventory_url)
+
         if base_url and not base_url.endswith("/"):
             raise commands.BadArgument("The base url must end with a slash.")
         inventory_url, inventory_dict = inventory
@@ -358,15 +358,19 @@ class Docs(commands.Cog):
             base_url = self.base_url_from_inventory_url(inventory_url)
 
         self.update_single(package_name, base_url, inventory_dict)
-        await ctx.send(f"Added the package `{package_name}` the inventories.")
+        await inter.followup.send(f"Added the package `{package_name}` the inventories.", ephemeral=True)
 
     @docs_group.command(name="refreshdoc", aliases=("refresh", "r"))
     @commands.is_owner()
-    async def refresh_command(self, ctx: commands.Context) -> None:
+    async def refresh_command(
+        self,
+        inter: AppCmdInter
+    ) -> None:
         """Refresh inventories and show the difference."""
+
+        await inter.response.defer(ephemeral=True)
         old_inventories = set(self.base_urls)
-        with ctx.typing():
-            await self.refresh_inventories()
+        await self.refresh_inventories()
         new_inventories = set(self.base_urls)
 
         if added := ", ".join(new_inventories - old_inventories):
@@ -379,22 +383,24 @@ class Docs(commands.Cog):
             title="Inventories refreshed",
             description=f"```diff\n{added}\n{removed}```" if added or removed else ""
         )
-        await ctx.send(embed=embed)
+        await inter.followup.send(embed=embed, ephemeral=True)
 
     @docs_group.command(name="cleardoccache", aliases=("deletedoccache", "c",))
     @commands.is_owner()
     async def clear_cache_command(
         self,
-        ctx: commands.Context
+        inter: AppCmdInter
     ) -> None:
         """Clears the cache while refreshing the inventories like `!docs refreshdoc` does."""
 
         doc_cache.delete()
         await self.refresh_inventories()
-        await ctx.send("Successfully cleared the cache and refreshed the inventories.")
+        await inter.send("Successfully cleared the cache and refreshed the inventories.")
 
     def cog_unload(self) -> None:
         """Clear scheduled inventories, queued symbols and cleanup task on cog unload."""
         self.inventory_scheduler.cancel_all()
-        self.init_refresh_task.cancel()
         create_task(self.item_fetcher.clear(), name="Docs.item_fetcher unload clear")
+
+    async def cog_load(self):
+        await self.refresh_inventories()
