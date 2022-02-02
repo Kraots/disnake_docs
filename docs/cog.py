@@ -332,7 +332,7 @@ class Docs(commands.Cog):
         """Get a base url from the url to an objects inventory by removing the last path segment."""
         return inventory_url.removesuffix("/").rsplit("/", maxsplit=1)[0] + "/"
 
-    @docs_group.sub_command(name="setdoc")
+    @docs_group.sub_command(name="set-doc")
     @commands.is_owner()
     async def set_command(
         self,
@@ -360,7 +360,7 @@ class Docs(commands.Cog):
         self.update_single(package_name, base_url, inventory_dict)
         await inter.followup.send(f"Added the package `{package_name}` the inventories.", ephemeral=True)
 
-    @docs_group.command(name="refreshdoc", aliases=("refresh", "r"))
+    @docs_group.sub_command(name="refresh")
     @commands.is_owner()
     async def refresh_command(
         self,
@@ -385,7 +385,7 @@ class Docs(commands.Cog):
         )
         await inter.followup.send(embed=embed, ephemeral=True)
 
-    @docs_group.command(name="cleardoccache", aliases=("deletedoccache", "c",))
+    @docs_group.sub_command(name="clear-doc-cache")
     @commands.is_owner()
     async def clear_cache_command(
         self,
