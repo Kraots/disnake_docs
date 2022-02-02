@@ -225,8 +225,11 @@ class Docs(commands.Cog):
         """
         Get the `DocItem` and the symbol name used to fetch it from the `doc_symbols` dict.
         """
+        doc_item = self.doc_symbols.get(symbol_name)
         doc_symbols = list(self.doc_symbols.items())
         matches = finder(symbol_name, doc_symbols, key=lambda t: t[0], lazy=False)[:self.limit]
+        if doc_item is not None:
+            matches = [doc_item, *matches]
         return matches
 
     async def get_symbol_markdown(self, doc_item: DocItem) -> str:
